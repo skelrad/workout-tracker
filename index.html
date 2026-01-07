@@ -580,17 +580,24 @@
             document.getElementById('exerciseForm').reset();
             document.getElementById('exerciseModal').classList.add('active');
         }
+function editExercise(i) {
+    haptic();
+    editingExerciseIndex = i;
+    const day = workoutData.weeks[selectedWeek].days[selectedDay];
+    const ex = day.exercises[i];
+    
+    document.getElementById('modalTitle').textContent = 'Edit Exercise';
+    document.getElementById('exerciseName').value = ex.name;
+    document.getElementById('exerciseType').value = ex.type || 'weight';
+    document.getElementById('exerciseSets').value = ex.sets;
+    document.getElementById('exerciseReps').value = ex.reps;
+    document.getElementById('exerciseTempo').value = ex.tempo;
+    document.getElementById('exerciseRest').value = ex.rest;
+    document.getElementById('exerciseNotes').value = ex.notes || '';
+    
+    document.getElementById('exerciseModal').classList.add('active');
+}
 
-        function editExercise(i) {
-            haptic();
-            editingExerciseIndex = i;
-            const day = workoutData.weeks[selectedWeek].days[selectedDay];
-            const ex = day.exercises[i];
-            
-            document.getElementById('modalTitle').textContent = 'Edit Exercise';
-            document.getElementById('exerciseName').value = ex.name;
-            document.getElementById('exerciseType').value = ex.type || 'weight';
-            document.getElementById('document.getElementById('exerciseModal').classList.add('active');
     }
 
     function deleteExercise(i) {
@@ -666,3 +673,4 @@
 
     initializeProgram();
 </script>
+
