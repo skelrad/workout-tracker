@@ -1,14 +1,49 @@
 <div class="modal" id="exerciseModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Add Exercise</h2>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-            </div>
-            <form id="exerciseForm">
-                <!-- form fields here -->
-            </form>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add Exercise</h2>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
+        <form id="exerciseForm">
+            <div class="form-group">
+                <label>Exercise Name</label>
+                <input type="text" id="exerciseName" required>
+            </div>
+            <div class="form-group">
+                <label>Exercise Type</label>
+                <select id="exerciseType">
+                    <option value="weight">Weight-based (dumbbells)</option>
+                    <option value="time">Time-based (cardio, planks)</option>
+                    <option value="bodyweight">Bodyweight (reps only)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sets</label>
+                <input type="number" id="exerciseSets" min="1" value="3" required inputmode="numeric">
+            </div>
+            <div class="form-group">
+                <label>Reps/Duration</label>
+                <input type="text" id="exerciseReps" value="8-12" required placeholder="e.g., 8-12 or 30s">
+            </div>
+            <div class="form-group">
+                <label>Tempo</label>
+                <input type="text" id="exerciseTempo" value="2-0-1-0">
+            </div>
+            <div class="form-group">
+                <label>Rest (seconds)</label>
+                <input type="number" id="exerciseRest" value="90" inputmode="numeric">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="exerciseNotes" placeholder="Optional notes..."></textarea>
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
     </div>
+</div>
 <script>
         let wakeLock = null;
 
@@ -682,4 +717,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeProgram();
 });
 </script>
+
 
