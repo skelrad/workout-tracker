@@ -1,50 +1,496 @@
-<div class="modal" id="exerciseModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modalTitle">Add Exercise</h2>
-            <button class="close-btn" onclick="closeModal()">&times;</button>
-        </div>
-        <form id="exerciseForm">
-            <div class="form-group">
-                <label>Exercise Name</label>
-                <input type="text" id="exerciseName" required>
-            </div>
-            <div class="form-group">
-                <label>Exercise Type</label>
-                <select id="exerciseType">
-                    <option value="weight">Weight-based (dumbbells)</option>
-                    <option value="time">Time-based (cardio, planks)</option>
-                    <option value="bodyweight">Bodyweight (reps only)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Sets</label>
-                <input type="number" id="exerciseSets" min="1" value="3" required inputmode="numeric">
-            </div>
-            <div class="form-group">
-                <label>Reps/Duration</label>
-                <input type="text" id="exerciseReps" value="8-12" required placeholder="e.g., 8-12 or 30s">
-            </div>
-            <div class="form-group">
-                <label>Tempo</label>
-                <input type="text" id="exerciseTempo" value="2-0-1-0">
-            </div>
-            <div class="form-group">
-                <label>Rest (seconds)</label>
-                <input type="number" id="exerciseRest" value="90" inputmode="numeric">
-            </div>
-            <div class="form-group">
-                <label>Notes</label>
-                <textarea id="exerciseNotes" placeholder="Optional notes..."></textarea>
-            </div>
-            <div class="button-group">
-                <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-            </div>
-        </form>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#6200ea">
+    <title>Workout Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #212121;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, #6200ea 0%, #3700b3 100%);
+            color: white;
+            padding: 48px 20px 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .app-header h1 {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .app-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .back-button {
+            position: absolute;
+            left: 12px;
+            top: 48px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            min-width: 48px;
+            min-height: 48px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        
+        .view {
+            display: none;
+        }
+        
+        .view.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            cursor: pointer;
+        }
+        
+        .card.completed {
+            background: #c8e6c9;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .card.active-week {
+            background: #fff9c4;
+            border-left: 4px solid #fdd835;
+        }
+        
+        .card.deload {
+            background: #ffe0b2;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .card.compact {
+            padding: 10px 16px;
+            margin-bottom: 8px;
+        }
+        
+        .card.compact h3 {
+            font-size: 15px;
+        }
+        
+        .card h3 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card p {
+            font-size: 14px;
+            color: #757575;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge.current {
+            background: #fdd835;
+            color: #000;
+        }
+        
+        .badge.completed {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .badge.deload {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .exercise-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+        
+        .exercise-card.completed {
+            background: #c8e6c9;
+        }
+        
+        .exercise-card.failed {
+            background: #ffcdd2;
+        }
+        
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        
+        .exercise-name {
+            font-size: 16px;
+            font-weight: 500;
+            flex: 1;
+        }
+        
+        .exercise-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .icon-btn {
+            background: rgba(0,0,0,0.04);
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            min-width: 40px;
+            min-height: 40px;
+        }
+        
+        .exercise-details {
+            font-size: 14px;
+            color: #757575;
+            margin-bottom: 12px;
+        }
+        
+        .next-session-info {
+            background: #e3f2fd;
+            border-left: 3px solid #2196f3;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .next-session-info strong {
+            color: #1976d2;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+        
+        .exercise-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-group label {
+            font-size: 12px;
+            color: #757575;
+            margin-bottom: 6px;
+            display: block;
+            font-weight: 500;
+        }
+        
+        .input-with-buttons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .input-with-buttons input {
+            flex: 1;
+            padding: 12px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .increment-btn {
+            background: #6200ea;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 44px;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .increment-btn:active {
+            background: #3700b3;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .completion-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            min-height: 48px;
+        }
+        
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: #6200ea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #757575;
+            color: white;
+        }
+        
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #6200ea;
+            color: white;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.24);
+            z-index: 50;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 200;
+            align-items: flex-end;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px 8px 0 0;
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #757575;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 6px;
+            color: #757575;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            font-family: inherit;
+        }
+        
+        .alert {
+            background: #fff9c4;
+            border-left: 4px solid #fdd835;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .progress-info {
+            background: #e8eaf6;
+            border-radius: 4px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-header">
+        <button class="back-button" id="backBtn" style="display: none;">←</button>
+        <h1 id="headerTitle">Workout Tracker</h1>
+        <p id="headerSubtitle">8-Week Training Cycle</p>
     </div>
-</div>
-<script>
+
+    <div class="container">
+        <div class="view active" id="weekView">
+            <div id="weekList"></div>
+        </div>
+
+        <div class="view" id="dayView">
+            <div id="dayList"></div>
+        </div>
+
+        <div class="view" id="exerciseView">
+            <div id="exerciseList"></div>
+        </div>
+    </div>
+
+    <button class="fab" id="addBtn" style="display: none;">+</button>
+
+    <div class="modal" id="exerciseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Exercise</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="exerciseForm">
+                <div class="form-group">
+                    <label>Exercise Name</label>
+                    <input type="text" id="exerciseName" required>
+                </div>
+                <div class="form-group">
+                    <label>Exercise Type</label>
+                    <select id="exerciseType">
+                        <option value="weight">Weight-based (dumbbells)</option>
+                        <option value="time">Time-based (cardio, planks)</option>
+                        <option value="bodyweight">Bodyweight (reps only)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Sets</label>
+                    <input type="number" id="exerciseSets" min="1" value="3" required inputmode="numeric">
+                </div>
+                <div class="form-group">
+                    <label>Reps/Duration</label>
+                    <input type="text" id="exerciseReps" value="8-12" required placeholder="e.g., 8-12 or 30s">
+                </div>
+                <div class="form-group">
+                    <label>Tempo</label>
+                    <input type="text" id="exerciseTempo" value="2-0-1-0">
+                </div>
+                <div class="form-group">
+                    <label>Rest (seconds)</label>
+                    <input type="number" id="exerciseRest" value="90" inputmode="numeric">
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="exerciseNotes" placeholder="Optional notes..."></textarea>
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
         let wakeLock = null;
 
         async function requestWakeLock() {
@@ -626,23 +1072,19 @@
             document.getElementById('exerciseForm').reset();
             document.getElementById('exerciseModal').classList.add('active');
         }
-function editExercise(i) {
-    haptic();
-    editingExerciseIndex = i;
-    const day = workoutData.weeks[selectedWeek].days[selectedDay];
-    const ex = day.exercises[i];
-    
-    document.getElementById('modalTitle').textContent = 'Edit Exercise';
-    document.getElementById('exerciseName').value = ex.name;
-    document.getElementById('exerciseType').value = ex.type || 'weight';
-    document.getElementById('exerciseSets').value = ex.sets;
-    document.getElementById('exerciseReps').value = ex.reps;
-    document.getElementById('exerciseTempo').value = ex.tempo;
-    document.getElementById('exerciseRest').value = ex.rest;
-    document.getElementById('exerciseNotes').value = ex.notes || '';
-    
-    document.getElementById('exerciseModal').classList.add('active');
-}
+
+        function editExercise(i) {
+            haptic();
+            editingExerciseIndex = i;
+            const day = workoutData.weeks[selectedWeek].days[selectedDay];
+            const ex = day.exercises[i];
+            
+            document.getElementById('modalTitle').textContent = 'Edit Exercise';
+            document.getElementById('exerciseName').value = ex.name;
+            document.getElementById('exerciseType').value = ex.type || 'weight';
+            document.getElementById('document.getElementById('exerciseModal').classList.add('active');
+    }
+
     function deleteExercise(i) {
         if (confirm('Delete this exercise?')) {
             haptic('medium');
@@ -652,12 +1094,12 @@ function editExercise(i) {
             renderExerciseList();
         }
     }
+
     function closeModal() {
         haptic();
         document.getElementById('exerciseModal').classList.remove('active');
     }
 
-document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('exerciseForm').onsubmit = function(e) {
         e.preventDefault();
         haptic('medium');
@@ -715,7 +1157,4 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     initializeProgram();
-});
 </script>
-
-
