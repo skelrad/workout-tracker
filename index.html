@@ -611,6 +611,7 @@ function editExercise(i) {
         document.getElementById('exerciseModal').classList.remove('active');
     }
 
+document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('exerciseForm').onsubmit = function(e) {
         e.preventDefault();
         haptic('medium');
@@ -668,7 +669,3 @@ function editExercise(i) {
     };
 
     initializeProgram();
-</script>
-
-
-
