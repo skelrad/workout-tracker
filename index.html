@@ -404,6 +404,21 @@
             font-size: 14px;
         }
         
+        .schedule-info {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        .schedule-info strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #7b1fa2;
+        }
+        
         .progress-info {
             background: #e8eaf6;
             border-radius: 4px;
@@ -525,11 +540,74 @@
         let selectedDay = null;
         let editingExerciseIndex = null;
 
+        function makeExercise(name, type, sets, reps, tempo, rest, notes) {
+            return {
+                name, type, sets, reps, tempo, rest,
+                weight: null, targetWeight: null, targetReps: null,
+                weightChange: 0, repsChange: 0, completed: null,
+                notes: notes || ""
+            };
+        }
+
+        function createDefaultDays(weekNumber) {
+            const isDeload = weekNumber === 4;
+            const s = (n) => isDeload ? Math.max(1, Math.round(n * 0.67)) : n;
+
+            return [
+                {
+                    dayNumber: 1,
+                    name: "Workout A – Chest Priority",
+                    completed: false,
+                    exercises: [
+                        makeExercise("Flat Dumbbell Bench Press",    "weight",     s(4), "6–10",      "3-1-1-0", 120, "Controlled, slight pause at bottom"),
+                        makeExercise("One-Arm Dumbbell Row",         "weight",     s(3), "8–12",      "2-1-1-0",  90, "Support hand on bench"),
+                        makeExercise("Goblet Squat",                 "weight",     s(3), "10–15",     "3-0-1-0",  90, "Slow descent"),
+                        makeExercise("Incline Dumbbell Press",       "weight",     s(3), "8–12",      "3-1-1-0",  90, "30–45° bench angle"),
+                        makeExercise("Plank",                        "time",       s(3), "30–60s",    "-",        45, "Brace hard"),
+                    ]
+                },
+                {
+                    dayNumber: 2,
+                    name: "Workout B – Back / Posterior Chain",
+                    completed: false,
+                    exercises: [
+                        makeExercise("Dumbbell Romanian Deadlift",          "weight",     s(3), "8–12",     "3-1-1-0", 120, "Feel stretch in hamstrings"),
+                        makeExercise("Pull-ups (or negatives)",             "bodyweight", s(3), "5–10",     "2-0-1-2",  90, "Use your bar"),
+                        makeExercise("Seated Dumbbell Shoulder Press",      "weight",     s(3), "8–12",     "2-0-1-0",  90, "Back supported, bench upright"),
+                        makeExercise("Bulgarian Split Squats",              "weight",     s(3), "8–10/leg", "3-0-1-0",  90, "Rear foot on bench – big payoff move"),
+                        makeExercise("Incline Bench Leg Raises",            "bodyweight", s(3), "10–15",    "-",        45, "Set bench to slight incline"),
+                    ]
+                },
+                {
+                    dayNumber: 3,
+                    name: "Workout C – Shoulders + Upper Chest",
+                    completed: false,
+                    exercises: [
+                        makeExercise("Incline Dumbbell Press",              "weight",     s(4), "6–10",     "3-1-1-0", 120, "Main priority lift"),
+                        makeExercise("Dumbbell Lateral Raises",             "weight",     s(3), "12–15",    "2-0-1-1",  60, "Strict form, lighter weight"),
+                        makeExercise("Chest-Supported Dumbbell Row",        "weight",     s(3), "8–12",     "2-1-1-0",  90, "Bench at incline, great for posture"),
+                        makeExercise("Flat Dumbbell Press (lighter)",       "weight",     s(3), "10–15",    "2-0-1-0",  75, "Pump work"),
+                        makeExercise("Dead Bugs",                           "bodyweight", s(3), "10–15",    "-",        45, "Controlled core work"),
+                    ]
+                },
+                {
+                    dayNumber: 4,
+                    name: "Cardio (Optional)",
+                    completed: false,
+                    exercises: [
+                        makeExercise("Cardio", "time", 1, "20–30 min", "-", 0, "Steady-state or light intervals"),
+                    ]
+                }
+            ];
+        }
+
         function initializeProgram() {
-            const saved = localStorage.getItem('workoutData');
+            const saved = localStorage.getItem('workoutDataV2');
             if (saved) {
                 workoutData = JSON.parse(saved);
             } else {
+                // Clear any old data key to avoid confusion
+                localStorage.removeItem('workoutData');
                 for (let week = 1; week <= 8; week++) {
                     workoutData.weeks.push({
                         weekNumber: week,
@@ -543,67 +621,11 @@
             renderWeekView();
         }
 
-        function createDefaultDays(weekNumber) {
-            const isDeload = weekNumber === 4;
-            const sets = isDeload ? 2 : 3;
-            
-            return [
-                {
-                    dayNumber: 1,
-                    name: "Upper Push",
-                    completed: false,
-                    exercises: [
-                        {name: "Incline DB Press", type: "weight", sets: sets, reps: "8-12", tempo: "3-1-1-1", rest: 90, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "DB Shoulder Press", type: "weight", sets: sets, reps: "8-12", tempo: "3-1-1-1", rest: 90, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Incline DB Fly", type: "weight", sets: isDeload ? 1 : 2, reps: "10-12", tempo: "2-1-1-0", rest: 60, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Lateral Raises", type: "weight", sets: isDeload ? 1 : 2, reps: "12-15", tempo: "2-0-1-1", rest: 60, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Overhead Triceps Extension", type: "weight", sets: isDeload ? 1 : 2, reps: "10-12", tempo: "2-0-2-0", rest: 60, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""}
-                    ]
-                },
-                {
-                    dayNumber: 2,
-                    name: "Cardio & Core",
-                    completed: false,
-                    exercises: [
-                        {name: "Cardio", type: "time", sets: 1, reps: "20 min", tempo: "-", rest: 0, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Plank", type: "time", sets: sets, reps: "20-30s", tempo: "-", rest: 45, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Dead Bug", type: "bodyweight", sets: sets, reps: "8-10/side", tempo: "-", rest: 45, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Glute Bridge", type: "bodyweight", sets: isDeload ? 1 : 2, reps: "12-15", tempo: "-", rest: 45, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""}
-                    ]
-                },
-                {
-                    dayNumber: 3,
-                    name: "Upper Pull",
-                    completed: false,
-                    exercises: [
-                        {name: "Inverted Rows", type: "bodyweight", sets: sets, reps: "6-10", tempo: "2-0-1-1", rest: 90, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "One-Arm DB Row", type: "weight", sets: sets, reps: "8-12", tempo: "2-1-1-1", rest: 60, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Rear Delt Raises", type: "weight", sets: isDeload ? 1 : 2, reps: "12-15", tempo: "2-0-1-1", rest: 60, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Incline DB Press", type: "weight", sets: isDeload ? 1 : 2, reps: "8-12", tempo: "3-1-1-1", rest: 90, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: "2nd session"},
-                        {name: "Hammer Curls", type: "weight", sets: isDeload ? 1 : 2, reps: "10-12", tempo: "2-0-1-1", rest: 60, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Standard DB Curls", type: "weight", sets: isDeload ? 1 : 2, reps: "10-12", tempo: "2-0-1-1", rest: 60, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""}
-                    ]
-                },
-                {
-                    dayNumber: 4,
-                    name: "Legs & Intervals",
-                    completed: false,
-                    exercises: [
-                        {name: "Goblet Squat", type: "weight", sets: sets, reps: "8-12", tempo: "3-1-1-0", rest: 90, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Reverse Lunge", type: "weight", sets: isDeload ? 1 : 2, reps: "8-10/leg", tempo: "2-0-1-0", rest: 60, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Romanian Deadlift", type: "weight", sets: sets, reps: "8-12", tempo: "3-1-1-0", rest: 90, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Calf Raises", type: "weight", sets: isDeload ? 1 : 2, reps: "12-15", tempo: "1-1-1-1", rest: 45, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""},
-                        {name: "Treadmill Intervals", type: "time", sets: 1, reps: "10 min", tempo: "-", rest: 0, weight: null, targetWeight: null, targetReps: null, weightChange: 0, repsChange: 0, completed: null, notes: ""}
-                    ]
-                }
-            ];
-        }
-
         function saveData() {
-            localStorage.setItem('workoutData', JSON.stringify(workoutData));
+            localStorage.setItem('workoutDataV2', JSON.stringify(workoutData));
         }
 
-function renderWeekView() {
+        function renderWeekView() {
             currentView = 'week';
             document.getElementById('weekView').classList.add('active');
             document.getElementById('dayView').classList.remove('active');
@@ -637,14 +659,11 @@ function renderWeekView() {
 
                 card.innerHTML = `
                     <h3>Week ${week.weekNumber} <div>${badge}</div></h3>
-                    <p>${done}/${week.days.length} days</p>
+                    <p>${done}/${week.days.length} days completed</p>
                     ${week.isDeload && !week.completed ? '<p style="color: #f57c00; margin-top: 8px;">⚠️ Reduce weight 30%</p>' : ''}
                 `;
                 
-                card.onclick = () => {
-                    haptic();
-                    showDayView(i);
-                };
+                card.onclick = () => { haptic(); showDayView(i); };
                 list.appendChild(card);
             });
         }
@@ -674,14 +693,11 @@ function renderWeekView() {
                 const done = day.exercises.filter(e => e.completed === true).length;
 
                 card.innerHTML = `
-                    <h3>Day ${day.dayNumber} - ${day.name} ${day.completed ? '<span class="badge completed">✓</span>' : ''}</h3>
+                    <h3>${day.name} ${day.completed ? '<span class="badge completed">✓</span>' : ''}</h3>
                     <p>${done}/${day.exercises.length} exercises</p>
                 `;
                 
-                card.onclick = () => {
-                    haptic();
-                    showExerciseView(weekIndex, i);
-                };
+                card.onclick = () => { haptic(); showExerciseView(weekIndex, i); };
                 list.appendChild(card);
             });
         }
@@ -700,8 +716,8 @@ function renderWeekView() {
             const week = workoutData.weeks[weekIndex];
             const day = week.days[dayIndex];
             
-            document.getElementById('headerTitle').textContent = `Day ${day.dayNumber}`;
-            document.getElementById('headerSubtitle').textContent = day.name;
+            document.getElementById('headerTitle').textContent = day.name.split('–')[0].trim();
+            document.getElementById('headerSubtitle').textContent = week.isDeload ? 'Deload' : '';
 
             renderExerciseList();
         }
@@ -715,7 +731,7 @@ function renderWeekView() {
             if (week.isDeload) {
                 const alert = document.createElement('div');
                 alert.className = 'alert';
-                alert.innerHTML = '⚠️ <strong>Deload Week:</strong> Consider reducing weight by 30%';
+                alert.innerHTML = '⚠️ <strong>Deload Week:</strong> Reduce weight by ~30%, focus on form';
                 list.appendChild(alert);
             }
 
@@ -726,10 +742,9 @@ function renderWeekView() {
                 if (ex.completed === true) card.classList.add('completed');
                 else if (ex.completed === false) card.classList.add('failed');
 
-                // Set default type if missing
                 if (!ex.type) ex.type = 'weight';
 
-                // Carry forward from previous week
+                // Carry forward weight from previous week
                 if (selectedWeek > 0 && ex.weight === null && ex.type === 'weight') {
                     const prev = workoutData.weeks[selectedWeek - 1].days[selectedDay].exercises[i];
                     if (prev && prev.name === ex.name) {
@@ -744,12 +759,10 @@ function renderWeekView() {
                 const w = ex.weight !== null ? `${ex.weight} lbs` : 'Not set';
                 const r = ex.targetReps || ex.reps;
 
-                // Show "Next Session" info prominently
                 let nextSessionInfo = '';
                 if (selectedWeek < 7 && ex.completed !== null) {
                     const nextWeight = isWeightBased ? (ex.weight + ex.weightChange) : null;
                     const nextReps = ex.repsChange !== 0 ? `${ex.repsChange >= 0 ? '+' : ''}${ex.repsChange} reps` : 'Same';
-                    
                     nextSessionInfo = `
                         <div class="next-session-info">
                             <strong>📅 Next Week (Week ${selectedWeek + 2}):</strong>
@@ -825,7 +838,6 @@ function renderWeekView() {
                             </div>
                         `;
                     } else {
-                        // Bodyweight
                         inputsHtml = `
                             <div class="exercise-inputs">
                                 <div class="input-group">
@@ -862,7 +874,7 @@ function renderWeekView() {
                         </div>
                     </div>
                     <div class="exercise-details">
-                        ${ex.sets} sets × ${r} | ${ex.tempo} | ${ex.rest}s rest
+                        ${ex.sets} sets × ${r} | ${ex.tempo !== '-' ? ex.tempo + ' tempo | ' : ''}${ex.rest > 0 ? ex.rest + 's rest' : 'no rest'}
                         ${ex.notes ? `<br><em>${ex.notes}</em>` : ''}
                     </div>
                     ${nextSessionInfo}
@@ -971,7 +983,7 @@ function renderWeekView() {
             }
         }
 
-function startNewCycle() {
+        function startNewCycle() {
             const lastWeek = workoutData.weeks[7];
             
             workoutData.currentCycle++;
@@ -991,6 +1003,7 @@ function startNewCycle() {
                     const newDay = {
                         dayNumber: lastDay.dayNumber,
                         name: lastDay.name,
+                        scheduleDay: lastDay.scheduleDay,
                         completed: false,
                         exercises: []
                     };
@@ -1001,7 +1014,7 @@ function startNewCycle() {
                         newDay.exercises.push({
                             name: lastEx.name,
                             type: lastEx.type || 'weight',
-                            sets: isDeload ? Math.round(lastEx.sets * 0.67) : lastEx.sets,
+                            sets: isDeload ? Math.max(1, Math.round(lastEx.sets * 0.67)) : lastEx.sets,
                             reps: lastEx.reps,
                             tempo: lastEx.tempo,
                             rest: lastEx.rest,
@@ -1096,7 +1109,6 @@ function startNewCycle() {
                 exData.weightChange = existing.weightChange;
                 exData.repsChange = existing.repsChange;
                 exData.completed = existing.completed;
-                
                 day.exercises[editingExerciseIndex] = exData;
             } else {
                 day.exercises.push(exData);
